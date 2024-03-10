@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/mglslg/gpt-play/cmd/g"
-	"github.com/mglslg/gpt-play/cmd/g/ds"
-	"github.com/mglslg/gpt-play/cmd/util"
+	"github.com/mglslg/go-discord-gpt/cmd/g"
+	"github.com/mglslg/go-discord-gpt/cmd/g/ds"
+	"github.com/mglslg/go-discord-gpt/cmd/util"
 )
 
 func setChannelStatus(us *ds.UserSession) {

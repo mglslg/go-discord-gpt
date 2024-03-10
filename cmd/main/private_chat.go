@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/bwmarrin/discordgo"
-	"github.com/mglslg/gpt-play/cmd/g"
-	"github.com/mglslg/gpt-play/cmd/g/ds"
+	"github.com/mglslg/go-discord-gpt/cmd/g"
+	"github.com/mglslg/go-discord-gpt/cmd/g/ds"
 	"strings"
 )
 

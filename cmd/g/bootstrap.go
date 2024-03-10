@@ -3,7 +3,7 @@ package g
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/mglslg/gpt-play/cmd/g/ds"
+	"github.com/mglslg/go-discord-gpt/cmd/g/ds"
 	"gopkg.in/yaml.v3"
 	"io"
 	"log"

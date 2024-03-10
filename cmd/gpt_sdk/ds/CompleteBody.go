@@ -1,7 +1,7 @@
 package ds
 
 import (
-	"github.com/mglslg/gpt-play/cmd/g/ds"
+	"github.com/mglslg/go-discord-gpt/cmd/g/ds"
 )
 
 type CompleteBody struct {

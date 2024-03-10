@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"github.com/mglslg/gpt-play/cmd/g"
+	"github.com/mglslg/go-discord-gpt/cmd/g"
 )
 
 func doForgetAllCmd(s *discordgo.Session, i *discordgo.InteractionCreate) {

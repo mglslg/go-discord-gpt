@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/mglslg/gpt-play/cmd/g"
+	"github.com/mglslg/go-discord-gpt/cmd/g"
 	"log"
 	"os"
 	"os/signal"

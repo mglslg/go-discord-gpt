@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"github.com/mglslg/gpt-play/cmd/g"
-	"github.com/mglslg/gpt-play/cmd/g/ds"
-	"github.com/mglslg/gpt-play/cmd/gpt_sdk"
+	"github.com/mglslg/go-discord-gpt/cmd/g"
+	"github.com/mglslg/go-discord-gpt/cmd/g/ds"
+	"github.com/mglslg/go-discord-gpt/cmd/gpt_sdk"
 	"os"
 	"regexp"
 	"strings"

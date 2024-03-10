@@ -3,9 +3,9 @@ package gpt_sdk
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/mglslg/gpt-play/cmd/g"
-	"github.com/mglslg/gpt-play/cmd/g/ds"
-	ds2 "github.com/mglslg/gpt-play/cmd/gpt_sdk/ds"
+	"github.com/mglslg/go-discord-gpt/cmd/g"
+	"github.com/mglslg/go-discord-gpt/cmd/g/ds"
+	ds2 "github.com/mglslg/go-discord-gpt/cmd/gpt_sdk/ds"
 	"io/ioutil"
 	"net/http"
 )
