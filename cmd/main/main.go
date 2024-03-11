@@ -17,7 +17,7 @@ func main() {
 	var configFilePath string
 
 	//本地调试按需修改
-	flag.StringVar(&roleName, "role", "Maainong", "The role of the bot")
+	flag.StringVar(&roleName, "role", "Dobby", "The role of the bot")
 	flag.StringVar(&configFilePath, "config", "config/home_config.yaml", "path to config file")
 	//flag.StringVar(&configFilePath, "config", "config/company_config.yaml", "path to config file")
 	flag.Parse()
@@ -27,7 +27,6 @@ func main() {
 	logFile := g.InitLogger()
 	logger = g.Logger
 	g.InitSecretConfig()
-	g.InitPrivateChatAuth()
 	g.InitSessionMap()
 
 	session, err := initDiscordSession()

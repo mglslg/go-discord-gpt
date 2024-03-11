@@ -27,7 +27,7 @@ func Chat(msg []ds.ChatMessage, us *ds.UserSession) (string, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+g.SecToken.ChatGPT)
+	req.Header.Set("Authorization", "Bearer "+g.SecToken.OpenAi)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -82,7 +82,7 @@ func Complete(prompt string, message string) (string, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+g.SecToken.ChatGPT)
+	req.Header.Set("Authorization", "Bearer "+g.SecToken.OpenAi)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -110,9 +110,9 @@ func Complete(prompt string, message string) (string, error) {
 	}
 
 	g.Logger.Println(">>>>>prompt:", prompt)
-	g.Logger.Println(">>>>>gpt响应:", chatGptResponse.Choices[0].Text)
-	g.Logger.Println(">>>>>finish原因:", chatGptResponse.Choices[0].FinishReason)
-	g.Logger.Println(">>>>>已花费token:", chatGptResponse.Usage.TotalTokens)
+	g.Logger.Println(">>>>>gpt response:", chatGptResponse.Choices[0].Text)
+	g.Logger.Println(">>>>>finish reason:", chatGptResponse.Choices[0].FinishReason)
+	g.Logger.Println(">>>>>total token:", chatGptResponse.Usage.TotalTokens)
 
 	return chatGptResponse.Choices[0].Text, nil
 }

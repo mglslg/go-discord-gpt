@@ -6,7 +6,6 @@ import (
 	"github.com/mglslg/go-discord-gpt/cmd/g"
 	"github.com/mglslg/go-discord-gpt/cmd/g/ds"
 	"github.com/mglslg/go-discord-gpt/cmd/gpt_sdk"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -33,8 +32,6 @@ func initDiscordSession() (*discordgo.Session, error) {
 		//createCmd(session, "英文翻译", "将其它语言翻译成英文")
 		//createCmd(session, "中文翻译", "将其它语言翻译成中文")
 		session.AddHandler(onBoggartSlashCmd)
-	} else if g.Role.Name == "Maainong" {
-		//todo 暂时没有可执行的命令
 	} else {
 		logger.Println("开始创建cmd监听")
 		createCmd(session, "一忘皆空", "清除与"+g.Role.Name+"的聊天上下文")
@@ -96,40 +93,17 @@ func onMsgCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-// 无需AT的上下文回复
+// Contextual reply without AT
 func simpleReply(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.UserSession) {
-	//从这里改动翻译机器人
-	//todo 待实现
+	//todo
 }
 
-// 无需AT的单次回复
+// Single reply without AT
 func simpleReplyOnce(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.UserSession) {
-	latestMsg, e := fetchLatestMessages(s, us.ChannelID, g.Conf.MaxUserRecord)
-	if e != nil {
-		logger.Fatal("抓取聊天记录失败", e)
-	}
-
-	respChannel := make(chan string)
-
-	//翻译机器人
-	if g.Role.Name == "Maainong" {
-		g.Logger.Println("Reading English translator prompt file...")
-		file, err := os.ReadFile("role/maainong_prompt/cn_en_translator")
-		if err != nil {
-			g.Logger.Println(err.Error())
-		}
-		translatorPrompt := string(file)
-
-		go callOpenAICompletion(latestMsg.Content, translatorPrompt, us.UserName, respChannel)
-
-		//异步获取响应结果并提示[正在输入]
-		asyncResponse(s, m, us, respChannel)
-	} else {
-		//todo 非翻译机器人以外的暂不做处理
-	}
+	//todo
 }
 
-// 需要AT的单次回复
+// Single reply that requires AT
 func replyOnce(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.UserSession) {
 	allMsg, e := fetchMessagesByCount(s, us.ChannelID, g.Conf.MaxUserRecord)
 	if e != nil {
@@ -140,39 +114,19 @@ func replyOnce(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.UserSess
 	conversation := getLatestMentionContext(allMsg, us)
 
 	//翻译机器人
-	if g.Role.Name == "Maainong" {
-		if m.Mentions != nil {
-			for _, mentioned := range m.Mentions {
-				if mentioned.ID == g.Conf.DiscordBotID {
-					respChannel := make(chan string)
-					g.Logger.Println("Reading English translator prompt file...")
-					file, err := os.ReadFile("role/maainong_prompt/cn_en_translator")
-					if err != nil {
-						g.Logger.Println(err.Error())
-					}
-					translatorPrompt := string(file)
-					lastMsg, _ := conversation.GetBottomElement()
-					go callOpenAICompletion(getCleanMsg(lastMsg.Content), translatorPrompt, us.UserName, respChannel)
-					asyncResponse(s, m, us, respChannel)
-					return
-				}
-			}
-		}
-	} else {
-		if m.Mentions != nil {
-			for _, mentioned := range m.Mentions {
-				if mentioned.ID == g.Conf.DiscordBotID {
-					respChannel := make(chan string)
-					go callOpenAIChat(conversation, us, respChannel)
-					asyncResponse(s, m, us, respChannel)
-					return
-				}
+	if m.Mentions != nil {
+		for _, mentioned := range m.Mentions {
+			if mentioned.ID == g.Conf.DiscordBotID {
+				respChannel := make(chan string)
+				go callOpenAIChat(conversation, us, respChannel)
+				asyncResponse(s, m, us, respChannel)
+				return
 			}
 		}
 	}
 }
 
-// 需要AT的上下文回复
+// Contextual reply that requires AT
 func reply(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.UserSession) {
 	if m.Mentions != nil {
 		for _, mentioned := range m.Mentions {
@@ -196,7 +150,7 @@ func reply(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.UserSession)
 	}
 }
 
-// 异步接收接口响应并提示[正在输入]
+// Asynchronous reception of interface response and prompt [typing]
 func asyncResponse(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.UserSession, respChannel chan string) {
 	for {
 		select {
@@ -222,7 +176,10 @@ func asyncResponse(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.User
 			return
 
 		default:
-			s.ChannelTyping(us.ChannelID)
+			err := s.ChannelTyping(us.ChannelID)
+			if err != nil {
+				return
+			}
 			time.Sleep(5 * time.Second)
 		}
 	}
@@ -378,17 +335,6 @@ func callOpenAIChat(msgStack *ds.Stack, us *ds.UserSession, resultChannel chan s
 	} else {
 		resultChannel <- fullChatStrategy(messages, us)
 	}
-}
-
-func callOpenAICompletion(userMessage string, prompt string, currUser string, resultChannel chan string) {
-	logger.Println("prompt:", prompt)
-	logger.Println("userMessage:", userMessage)
-
-	result, _ := gpt_sdk.Complete(prompt, userMessage)
-
-	resultChannel <- result
-
-	logger.Println("================================")
 }
 
 func fullChatStrategy(messages []ds.ChatMessage, us *ds.UserSession) (resp string) {

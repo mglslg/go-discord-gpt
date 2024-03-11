@@ -9,12 +9,12 @@ import (
 func setChannelStatus(us *ds.UserSession) {
 	channelId := us.ChannelID
 
-	//gpt-4
+	//gpt-4 channel
 	if channelId == "1127815740725153812" {
 		us.Prompt = g.Role.Characters[1].Desc
 		us.Model = "gpt-4-0125-preview"
 	}
-	//translate
+	//translate channel
 	if channelId == "1095947683597914162" {
 		us.OnConversation = false
 		//us.OnAt = false
@@ -23,9 +23,7 @@ func setChannelStatus(us *ds.UserSession) {
 }
 
 func setRoleStatus(us *ds.UserSession) {
-	if g.Role.Name == "Maainong" {
-		us.OnConversation = false
-	}
+	//todo
 }
 
 // 超级用户或特定频道才有权限触发机器人回复
