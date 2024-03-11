@@ -75,20 +75,7 @@ func onMsgCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//在这里根据不同的机器人设置userSession状态
 	setRoleStatus(us)
 
-	if isPrivateChat(s, us) {
-		s.ChannelMessageSend(us.ChannelID, "[私聊功能暂停使用,请到聊天室里使用机器人]")
-		/*if util.ContainsString(us.UserId, g.PrivateChatAuth.UserIds) {
-			//私聊
-			if m.Content == "/一忘皆空" {
-				replyContent := fmt.Sprintf("%s", g.Role.ClearDelimiter)
-				s.ChannelMessageSend(us.ChannelID, replyContent)
-			} else {
-				privateReply(s,m,us)
-			}
-		} else {
-			s.ChannelMessageSend(us.ChannelID, "[您尚未开通私聊权限,请联系管理员Solongo]")
-		}*/
-	} else if hasChannelPrivilege(us) {
+	if hasChannelPrivilege(us) {
 		g.Logger.Println("******************************************************OnMessage******************************************************")
 		g.Logger.Println("OnAt:", us.OnAt, ",OnConversation:", us.OnConversation)
 

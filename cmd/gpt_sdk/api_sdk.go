@@ -51,12 +51,12 @@ func Chat(msg []ds.ChatMessage, us *ds.UserSession) (string, error) {
 	}
 
 	if len(chatGptResponse.Choices) == 0 {
-		return "[未获取到gpt响应数据]", nil
+		return "[Failed to get gpt response]", nil
 	}
-	g.Logger.Println(">>>>>gpt模型:", us.Model)
-	g.Logger.Println(">>>>>gpt响应:", chatGptResponse.Choices[0].Message.Content)
-	g.Logger.Println(">>>>>finish原因:", chatGptResponse.Choices[0].FinishReason)
-	g.Logger.Println(">>>>>已花费token:", chatGptResponse.Usage.TotalTokens)
+	g.Logger.Println(">>>>>gpt model:", us.Model) //En:
+	g.Logger.Println(">>>>>gpt response:", chatGptResponse.Choices[0].Message.Content)
+	g.Logger.Println(">>>>>finish reason:", chatGptResponse.Choices[0].FinishReason)
+	g.Logger.Println(">>>>>total token:", chatGptResponse.Usage.TotalTokens)
 
 	return chatGptResponse.Choices[0].Message.Content, nil
 }
@@ -106,7 +106,7 @@ func Complete(prompt string, message string) (string, error) {
 	}
 
 	if len(chatGptResponse.Choices) == 0 {
-		return "[未获取到gpt响应数据]", nil
+		return "[Failed to get gpt response]", nil
 	}
 
 	g.Logger.Println(">>>>>prompt:", prompt)

@@ -1,7 +1,7 @@
 package ds
 
 type GlobalConfig struct {
-	GuildID        string `yaml:"guildId"` //公会ID(聊天室ID)
+	GuildID        string `yaml:"guildId"` //Guild ID (Chat Room ID)
 	AdminID        string `yaml:"adminId"`
 	DiscordBotID   string `yaml:"discordBodId"`
 	Gpt4ChannelId  string `yaml:"gpt4ChannelId"`

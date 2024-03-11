@@ -59,7 +59,7 @@ func InitLogger() *os.File {
 	currentDate := time.Now().Format("2006-01-02")
 	logPath := fmt.Sprintf("%s/logs", Conf.Home)
 
-	// 检查logs目录是否存在，如果不存在则创建
+	// Check if the logs directory exists, create it if it does not exist
 	if _, err := os.Stat(logPath); os.IsNotExist(err) {
 		if mkErr := os.MkdirAll(logPath, 0755); mkErr != nil {
 			log.Fatalf("Unable to create log directory: %v", mkErr)
@@ -68,13 +68,13 @@ func InitLogger() *os.File {
 
 	logFileName := fmt.Sprintf("%s/%s-%s.log", logPath, currentDate, Role.Name)
 
-	// 创建一个日志文件
+	// Create a log file
 	f, err := os.OpenFile(logFileName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalf("Unable to open log file: %v", err)
 	}
 
-	// 创建一个日志记录器
+	// Create a logger
 	Logger = log.New(io.MultiWriter(os.Stderr, f), "", log.LstdFlags)
 
 	return f
@@ -115,7 +115,7 @@ func InitSessionMap() {
 	SessionMap = make(map[string]*ds.UserSession)
 }
 
-// GetUserSession 获取当前用户session,如果没有则创建
+// GetUserSession Get the current user session, create it if it does not exist
 func GetUserSession(authorId string, channelId string, authorName string) *ds.UserSession {
 	key := getUserChannelId(authorId, channelId)
 	_, exists := SessionMap[key]
@@ -137,8 +137,8 @@ func newUserSession(authorId string, channelId string, authorName string) *ds.Us
 		Temperature:     0.7,
 		Prompt:          Role.Characters[0].Desc,
 		AllowChannelIds: Role.ChannelIds,
-		OnConversation:  true, //默认都是有上下文的
-		OnAt:            true, //默认都是需要艾特才回复的
+		OnConversation:  true, //Default to have context
+		OnAt:            true, //Default to reply only when AT
 	}
 }
 

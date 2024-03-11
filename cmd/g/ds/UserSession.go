@@ -1,8 +1,8 @@
 package ds
 
-// UserSession 每个用户在每个频道中都持有一个session保存其状态
+// UserSession Each user holds a session in each channel to save its state
 type UserSession struct {
-	UserChannelID   string //UserSession的唯一key
+	UserChannelID   string //UserSession's unique key
 	UserId          string
 	ChannelID       string
 	UserName        string
@@ -10,7 +10,7 @@ type UserSession struct {
 	Model           string
 	Temperature     float64
 	Prompt          string
-	AllowChannelIds []string //频道权限,针对非VIP用户生效
-	OnConversation  bool     //是否开启上下文
-	OnAt            bool     //是否需要AT机器人才会回复
+	AllowChannelIds []string //Channel permission, effective for non-VIP users
+	OnConversation  bool     //Whether to enable context
+	OnAt            bool     //Whether to reply to the robot only when AT
 }
