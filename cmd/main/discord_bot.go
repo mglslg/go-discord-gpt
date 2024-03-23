@@ -23,20 +23,11 @@ func initDiscordSession() (*discordgo.Session, error) {
 	intents := discordgo.IntentsAllWithoutPrivileged
 	session.Identify.Intents = intents
 
-	if g.Role.Name == "Boggart" {
-		createCmd(session, "滑稽滑稽", "清除博格特上下文")
-		createCmd(session, "python专家", "解答各类python相关问题")
-		createCmd(session, "golang专家", "解答各类golang相关问题")
-		createCmd(session, "java专家", "解答各类java相关问题")
-		createCmd(session, "linux专家", "解答各类linux相关问题")
-		//createCmd(session, "英文翻译", "将其它语言翻译成英文")
-		//createCmd(session, "中文翻译", "将其它语言翻译成中文")
-		session.AddHandler(onBoggartSlashCmd)
-	} else {
-		logger.Println("开始创建cmd监听")
-		createCmd(session, "一忘皆空", "清除与"+g.Role.Name+"的聊天上下文")
-		session.AddHandler(doForgetAllCmd)
-	}
+	logger.Println("开始创建cmd监听")
+
+	createCmd(session, "一忘皆空", "清除与"+g.Assistant.Name+"的聊天上下文")
+	//createCmd(session, "准备魔杖", "自定义Prompt")
+	session.AddHandler(onCommand)
 
 	//监听消息
 	session.AddHandler(onMsgCreate)
@@ -48,7 +39,7 @@ func initDiscordSession() (*discordgo.Session, error) {
 }
 
 func createCmd(session *discordgo.Session, cmdName string, cmdDesc string) {
-	_, cmdErr := session.ApplicationCommandCreate(g.Role.ApplicationId, g.Conf.GuildID, &discordgo.ApplicationCommand{
+	_, cmdErr := session.ApplicationCommandCreate(g.Assistant.ApplicationId, "", &discordgo.ApplicationCommand{
 		Name:        cmdName,
 		Description: cmdDesc,
 	})
@@ -59,7 +50,7 @@ func createCmd(session *discordgo.Session, cmdName string, cmdDesc string) {
 
 func onMsgCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//如果是机器人发的消息则不予理睬
-	if m.Author.ID == g.Conf.DiscordBotID {
+	if m.Author.ID == g.AppSession.DiscordBotID {
 		return
 	}
 
@@ -72,23 +63,21 @@ func onMsgCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//在这里根据不同的机器人设置userSession状态
 	setRoleStatus(us)
 
-	if hasChannelPrivilege(us) {
-		g.Logger.Println("******************************************************OnMessage******************************************************")
-		g.Logger.Println("OnAt:", us.OnAt, ",OnConversation:", us.OnConversation)
+	g.Logger.Println("******************************************************OnMessage******************************************************")
+	g.Logger.Println("OnAt:", us.OnAt, ",OnConversation:", us.OnConversation)
 
-		if us.OnAt {
-			if us.OnConversation {
-				reply(s, m, us)
-			} else {
-				replyOnce(s, m, us)
-			}
+	if us.OnAt {
+		if us.OnConversation {
+			reply(s, m, us)
 		} else {
-			//目前已经没有这种分支的情况了,都是需要AT的
-			if us.OnConversation {
-				simpleReply(s, m, us)
-			} else {
-				simpleReplyOnce(s, m, us)
-			}
+			replyOnce(s, m, us)
+		}
+	} else {
+		//目前已经没有这种分支的情况了,都是需要AT的
+		if us.OnConversation {
+			simpleReply(s, m, us)
+		} else {
+			simpleReplyOnce(s, m, us)
 		}
 	}
 }
@@ -105,7 +94,7 @@ func simpleReplyOnce(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.Us
 
 // Single reply that requires AT
 func replyOnce(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.UserSession) {
-	allMsg, e := fetchMessagesByCount(s, us.ChannelID, g.Conf.MaxUserRecord)
+	allMsg, e := fetchMessagesByCount(s, us.ChannelID, g.AppSession.MaxUserRecord)
 	if e != nil {
 		logger.Fatal("抓取聊天记录失败", e)
 	}
@@ -116,7 +105,7 @@ func replyOnce(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.UserSess
 	//翻译机器人
 	if m.Mentions != nil {
 		for _, mentioned := range m.Mentions {
-			if mentioned.ID == g.Conf.DiscordBotID {
+			if mentioned.ID == g.AppSession.DiscordBotID {
 				respChannel := make(chan string)
 				go callOpenAIChat(conversation, us, respChannel)
 				asyncResponse(s, m, us, respChannel)
@@ -130,8 +119,8 @@ func replyOnce(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.UserSess
 func reply(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.UserSession) {
 	if m.Mentions != nil {
 		for _, mentioned := range m.Mentions {
-			if mentioned.ID == g.Conf.DiscordBotID {
-				allMsg, e := fetchMessagesByCount(s, us.ChannelID, g.Conf.MaxUserRecord)
+			if mentioned.ID == g.AppSession.DiscordBotID {
+				allMsg, e := fetchMessagesByCount(s, us.ChannelID, g.AppSession.MaxUserRecord)
 				if e != nil {
 					logger.Fatal("抓取聊天记录失败", e)
 				}
@@ -209,7 +198,7 @@ func getLatestMentionContext(messages []*discordgo.Message, us *ds.UserSession) 
 	for _, msg := range messages {
 		for _, mention := range msg.Mentions {
 			//找出当前用户艾特机器人的最后一条记录
-			if msg.Author.ID == us.UserId && mention.ID == g.Conf.DiscordBotID {
+			if msg.Author.ID == us.UserId && mention.ID == g.AppSession.DiscordBotID {
 				msgStack.Push(msg)
 				return msgStack
 			}
@@ -225,7 +214,7 @@ func geMentionContext(messages []*discordgo.Message, us *ds.UserSession) *ds.Sta
 	for _, msg := range messages {
 		for _, mention := range msg.Mentions {
 			//找出当前用户艾特GPT以及GPT艾特当前用户的聊天记录
-			if (msg.Author.ID == g.Conf.DiscordBotID && mention.ID == us.UserId) || (msg.Author.ID == us.UserId && mention.ID == g.Conf.DiscordBotID) {
+			if (msg.Author.ID == g.AppSession.DiscordBotID && mention.ID == us.UserId) || (msg.Author.ID == us.UserId && mention.ID == g.AppSession.DiscordBotID) {
 				//一旦发现clear命令的分隔符则直接终止向消息栈push,直接返回
 				if strings.Contains(msg.Content, us.ClearDelimiter) {
 					g.Logger.Println("geMentionContext:delimiter:", us.ClearDelimiter, "context:", msgStack)
@@ -241,7 +230,7 @@ func geMentionContext(messages []*discordgo.Message, us *ds.UserSession) *ds.Sta
 func fetchLatestMessages(s *discordgo.Session, channelID string, count int) (*discordgo.Message, error) {
 	var messages *discordgo.Message
 
-	msgs, err := s.ChannelMessages(channelID, g.Conf.MaxFetchRecord, "", "", "")
+	msgs, err := s.ChannelMessages(channelID, g.AppSession.MaxFetchRecord, "", "", "")
 
 	if err != nil {
 		logger.Fatal("Error fetching channel messages:", err)
@@ -252,21 +241,6 @@ func fetchLatestMessages(s *discordgo.Session, channelID string, count int) (*di
 			messages = msg
 			break
 		}
-
-		// 打印附件
-		for _, attachment := range msg.Attachments {
-			fmt.Printf("  [Attachment] %s: %s\n", attachment.Filename, attachment.URL)
-		}
-
-		// 打印嵌入内容
-		for _, embed := range msg.Embeds {
-			fmt.Printf("  [Embed] Title: %s, Description: %s, URL: %s\n", embed.Title, embed.Description, embed.URL)
-		}
-
-		// 打印自定义表情
-		for _, reaction := range msg.Reactions {
-			fmt.Printf("  [Reaction] Emoji: %s, Count: %d\n", reaction.Emoji.Name, reaction.Count)
-		}
 	}
 	return messages, nil
 }
@@ -274,7 +248,7 @@ func fetchLatestMessages(s *discordgo.Session, channelID string, count int) (*di
 func fetchMessagesByCount(s *discordgo.Session, channelID string, count int) ([]*discordgo.Message, error) {
 	var messages []*discordgo.Message
 
-	msgs, err := s.ChannelMessages(channelID, g.Conf.MaxFetchRecord, "", "", "")
+	msgs, err := s.ChannelMessages(channelID, g.AppSession.MaxFetchRecord, "", "", "")
 
 	if err != nil {
 		logger.Fatal("Error fetching channel messages:", err)
@@ -319,7 +293,7 @@ func callOpenAIChat(msgStack *ds.Stack, us *ds.UserSession, resultChannel chan s
 		msg, _ := msgStack.Pop()
 
 		role := "user"
-		if msg.Author.ID == g.Conf.DiscordBotID {
+		if msg.Author.ID == g.AppSession.DiscordBotID {
 			role = "assistant"
 		}
 

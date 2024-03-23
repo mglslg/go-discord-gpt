@@ -16,6 +16,7 @@ func main() {
 	var roleName string
 	var configFilePath string
 
+	//todo 这边改为使用配置文件启动应用
 	//本地调试按需修改
 	flag.StringVar(&roleName, "role", "Dobby", "The role of the bot")
 	flag.StringVar(&configFilePath, "config", "config/home_config.yaml", "path to config file")
@@ -23,11 +24,11 @@ func main() {
 	flag.Parse()
 
 	g.InitConfig(configFilePath)
-	g.InitRole(roleName)
+	g.InitAssistant(roleName)
 	logFile := g.InitLogger()
 	logger = g.Logger
 	g.InitSecretConfig()
-	g.InitSessionMap()
+	g.InitUserSession()
 
 	session, err := initDiscordSession()
 
@@ -44,7 +45,7 @@ func main() {
 		return
 	}
 
-	g.Conf.DiscordBotID = session.State.User.ID
+	g.AppSession.DiscordBotID = session.State.User.ID
 
 	logger.Println("Bot is now running.")
 	fmt.Println("Bot is now running. Press CTRL-C to exit.")

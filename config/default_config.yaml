@@ -1,0 +1,21 @@
+home: /Users/slg/app
+maxFetchRecord: 100
+maxUserRecord: 50
+defaultChatModel: gpt-3.5-turbo
+defaultChatTemperature: 0.7
+assistant:
+  name: Dobby
+  applicationId: 1092088932088418384
+  clearDelimiter: (多比水汪汪的大眼睛充满泪水，不可置信的看着你)啊! 多比到底做错了什么……主人为什么要这么对多比……咦？你是谁???
+  characters:
+    - desc: blablabla1
+    - desc: blablabla2
+    - desc: blablabla3
+channelConfig:
+  - channelId: 123123
+    chatModel: gpt-4-0125-preview
+  - channelId: 33333
+    chatModel: gpt-3.5-turbo
+
+#每多问一次就把session中的count数量+1不就好了吗！然后每天清空一次session
+#chatLimit: 30
