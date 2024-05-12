@@ -1,21 +1,21 @@
-package gpt_sdk
+package openaisdk
 
 import (
 	"bytes"
 	"encoding/json"
 	"github.com/mglslg/go-discord-gpt/cmd/g"
 	"github.com/mglslg/go-discord-gpt/cmd/g/ds"
-	ds2 "github.com/mglslg/go-discord-gpt/cmd/gpt_sdk/ds"
+	ds2 "github.com/mglslg/go-discord-gpt/cmd/openaisdk/ds"
 	"io/ioutil"
 	"net/http"
 )
 
-func Chat(msg []ds.ChatMessage, us *ds.UserSession) (string, error) {
+func Chat(msg []ds.ChatMessage) (string, error) {
 	api := "https://api.openai.com/v1/chat/completions"
 	payload := map[string]interface{}{
-		"model":       us.Model,
+		"model":       g.AppContext.ChatModel,
 		"messages":    msg,
-		"temperature": us.Temperature,
+		"temperature": g.AppContext.ChatTemperature,
 	}
 
 	body, err := json.Marshal(payload)
@@ -53,7 +53,7 @@ func Chat(msg []ds.ChatMessage, us *ds.UserSession) (string, error) {
 	if len(chatGptResponse.Choices) == 0 {
 		return "[Failed to get gpt response]", nil
 	}
-	g.Logger.Println(">>>>>gpt model:", us.Model) //En:
+	g.Logger.Println(">>>>>gpt model:", g.AppContext.ChatModel)
 	g.Logger.Println(">>>>>gpt response:", chatGptResponse.Choices[0].Message.Content)
 	g.Logger.Println(">>>>>finish reason:", chatGptResponse.Choices[0].FinishReason)
 	g.Logger.Println(">>>>>total token:", chatGptResponse.Usage.TotalTokens)

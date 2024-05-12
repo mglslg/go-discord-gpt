@@ -2,7 +2,7 @@ module github.com/mglslg/go-discord-gpt
 
 go 1.18
 
-require github.com/bwmarrin/discordgo v0.27.1
+require github.com/bwmarrin/discordgo v0.28.1
 
 require github.com/go-resty/resty/v2 v2.7.0
 

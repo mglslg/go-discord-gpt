@@ -1,0 +1,5 @@
+openaiApiKey: sk-xxxx # todo 这里如果没有配置，则尝试从evn中读取
+guildId: 1084356913816412190
+applicationId: 1092088932088418384
+botName: 多比
+botToken: xxxx # todo 这里如果没有配置，则尝试从evn中读取

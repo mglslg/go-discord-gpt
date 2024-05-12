@@ -5,10 +5,14 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/mglslg/go-discord-gpt/cmd/g"
 	"github.com/mglslg/go-discord-gpt/cmd/g/ds"
-	"github.com/mglslg/go-discord-gpt/cmd/gpt_sdk"
+	"github.com/mglslg/go-discord-gpt/cmd/openaisdk"
 	"regexp"
 	"strings"
 	"time"
+)
+
+var (
+	ctx = g.AppContext
 )
 
 func initDiscordSession() (*discordgo.Session, error) {
@@ -25,7 +29,7 @@ func initDiscordSession() (*discordgo.Session, error) {
 
 	logger.Println("开始创建cmd监听")
 
-	createCmd(session, "一忘皆空", "清除与"+g.Assistant.Name+"的聊天上下文")
+	createCmd(session, ctx.ClearCmd, ctx.ClearCmdDesc)
 	//createCmd(session, "准备魔杖", "自定义Prompt")
 	session.AddHandler(onCommand)
 
@@ -39,7 +43,7 @@ func initDiscordSession() (*discordgo.Session, error) {
 }
 
 func createCmd(session *discordgo.Session, cmdName string, cmdDesc string) {
-	_, cmdErr := session.ApplicationCommandCreate(g.Assistant.ApplicationId, "", &discordgo.ApplicationCommand{
+	_, cmdErr := session.ApplicationCommandCreate(ctx.ApplicationId, "", &discordgo.ApplicationCommand{
 		Name:        cmdName,
 		Description: cmdDesc,
 	})
@@ -50,18 +54,12 @@ func createCmd(session *discordgo.Session, cmdName string, cmdDesc string) {
 
 func onMsgCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	//如果是机器人发的消息则不予理睬
-	if m.Author.ID == g.AppSession.DiscordBotID {
+	if m.Author.ID == g.AppContext.BotId {
 		return
 	}
 
 	//为当前用户创建session(机器人本身也会有用户session)
 	us := g.GetUserSession(m.Author.ID, m.ChannelID, m.Author.Username)
-
-	//在这里根据不同频道设置userSession状态
-	setChannelStatus(us)
-
-	//在这里根据不同的机器人设置userSession状态
-	setRoleStatus(us)
 
 	g.Logger.Println("******************************************************OnMessage******************************************************")
 	g.Logger.Println("OnAt:", us.OnAt, ",OnConversation:", us.OnConversation)
@@ -94,7 +92,7 @@ func simpleReplyOnce(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.Us
 
 // Single reply that requires AT
 func replyOnce(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.UserSession) {
-	allMsg, e := fetchMessagesByCount(s, us.ChannelID, g.AppSession.MaxUserRecord)
+	allMsg, e := fetchMessagesByCount(s, us.ChannelID, ctx.MaxUserRecord)
 	if e != nil {
 		logger.Fatal("抓取聊天记录失败", e)
 	}
@@ -105,7 +103,7 @@ func replyOnce(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.UserSess
 	//翻译机器人
 	if m.Mentions != nil {
 		for _, mentioned := range m.Mentions {
-			if mentioned.ID == g.AppSession.DiscordBotID {
+			if mentioned.ID == ctx.BotId {
 				respChannel := make(chan string)
 				go callOpenAIChat(conversation, us, respChannel)
 				asyncResponse(s, m, us, respChannel)
@@ -119,8 +117,8 @@ func replyOnce(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.UserSess
 func reply(s *discordgo.Session, m *discordgo.MessageCreate, us *ds.UserSession) {
 	if m.Mentions != nil {
 		for _, mentioned := range m.Mentions {
-			if mentioned.ID == g.AppSession.DiscordBotID {
-				allMsg, e := fetchMessagesByCount(s, us.ChannelID, g.AppSession.MaxUserRecord)
+			if mentioned.ID == ctx.BotId {
+				allMsg, e := fetchMessagesByCount(s, us.ChannelID, ctx.MaxUserRecord)
 				if e != nil {
 					logger.Fatal("抓取聊天记录失败", e)
 				}
@@ -198,7 +196,7 @@ func getLatestMentionContext(messages []*discordgo.Message, us *ds.UserSession) 
 	for _, msg := range messages {
 		for _, mention := range msg.Mentions {
 			//找出当前用户艾特机器人的最后一条记录
-			if msg.Author.ID == us.UserId && mention.ID == g.AppSession.DiscordBotID {
+			if msg.Author.ID == us.UserId && mention.ID == ctx.BotId {
 				msgStack.Push(msg)
 				return msgStack
 			}
@@ -214,7 +212,7 @@ func geMentionContext(messages []*discordgo.Message, us *ds.UserSession) *ds.Sta
 	for _, msg := range messages {
 		for _, mention := range msg.Mentions {
 			//找出当前用户艾特GPT以及GPT艾特当前用户的聊天记录
-			if (msg.Author.ID == g.AppSession.DiscordBotID && mention.ID == us.UserId) || (msg.Author.ID == us.UserId && mention.ID == g.AppSession.DiscordBotID) {
+			if (msg.Author.ID == ctx.BotId && mention.ID == us.UserId) || (msg.Author.ID == us.UserId && mention.ID == ctx.BotId) {
 				//一旦发现clear命令的分隔符则直接终止向消息栈push,直接返回
 				if strings.Contains(msg.Content, us.ClearDelimiter) {
 					g.Logger.Println("geMentionContext:delimiter:", us.ClearDelimiter, "context:", msgStack)
@@ -230,7 +228,7 @@ func geMentionContext(messages []*discordgo.Message, us *ds.UserSession) *ds.Sta
 func fetchLatestMessages(s *discordgo.Session, channelID string, count int) (*discordgo.Message, error) {
 	var messages *discordgo.Message
 
-	msgs, err := s.ChannelMessages(channelID, g.AppSession.MaxFetchRecord, "", "", "")
+	msgs, err := s.ChannelMessages(channelID, ctx.MaxFetchRecord, "", "", "")
 
 	if err != nil {
 		logger.Fatal("Error fetching channel messages:", err)
@@ -248,7 +246,7 @@ func fetchLatestMessages(s *discordgo.Session, channelID string, count int) (*di
 func fetchMessagesByCount(s *discordgo.Session, channelID string, count int) ([]*discordgo.Message, error) {
 	var messages []*discordgo.Message
 
-	msgs, err := s.ChannelMessages(channelID, g.AppSession.MaxFetchRecord, "", "", "")
+	msgs, err := s.ChannelMessages(channelID, ctx.MaxFetchRecord, "", "", "")
 
 	if err != nil {
 		logger.Fatal("Error fetching channel messages:", err)
@@ -293,7 +291,7 @@ func callOpenAIChat(msgStack *ds.Stack, us *ds.UserSession, resultChannel chan s
 		msg, _ := msgStack.Pop()
 
 		role := "user"
-		if msg.Author.ID == g.AppSession.DiscordBotID {
+		if msg.Author.ID == ctx.BotId {
 			role = "assistant"
 		}
 
@@ -318,7 +316,7 @@ func fullChatStrategy(messages []ds.ChatMessage, us *ds.UserSession) (resp strin
 	}
 	logger.Println("================================")
 
-	result, _ := gpt_sdk.Chat(messages, us)
+	result, _ := openaisdk.Chat(messages)
 
 	return result
 }
@@ -339,7 +337,7 @@ func abstractChatStrategy(messages []ds.ChatMessage, us *ds.UserSession) (resp s
 		Content: "尽量详细的概括上述聊天内容",
 	}
 
-	abstract, _ := gpt_sdk.Chat(messages, us)
+	abstract, _ := openaisdk.Chat(messages)
 	abstractMsg := make([]ds.ChatMessage, 0)
 
 	//人设
@@ -364,7 +362,7 @@ func abstractChatStrategy(messages []ds.ChatMessage, us *ds.UserSession) (resp s
 	}
 	logger.Println("================================")
 
-	result, _ := gpt_sdk.Chat(abstractMsg, us)
+	result, _ := openaisdk.Chat(abstractMsg)
 	return result
 }
 

@@ -13,18 +13,13 @@ import (
 var logger *log.Logger
 
 func main() {
-	var roleName string
 	var configFilePath string
 
-	//todo 这边改为使用配置文件启动应用
-	//本地调试按需修改
-	flag.StringVar(&roleName, "role", "Dobby", "The role of the bot")
-	flag.StringVar(&configFilePath, "config", "config/home_config.yaml", "path to config file")
-	//flag.StringVar(&configFilePath, "config", "config/company_config.yaml", "path to config file")
+	//todo 这边需要判断一下是否没有指定文件，如果没有指定则需要报错
+	flag.StringVar(&configFilePath, "config", "", "path to config file")
 	flag.Parse()
 
 	g.InitConfig(configFilePath)
-	g.InitAssistant(roleName)
 	logFile := g.InitLogger()
 	logger = g.Logger
 	g.InitSecretConfig()
@@ -45,7 +40,9 @@ func main() {
 		return
 	}
 
-	g.AppSession.DiscordBotID = session.State.User.ID
+	//todo 确认一下这个BotId是不是就是applicationId，它俩是否是同一个东西呢
+	//todo 如果是的话就统一换成applicationId
+	g.AppContext.BotId = session.State.User.ID
 
 	logger.Println("Bot is now running.")
 	fmt.Println("Bot is now running. Press CTRL-C to exit.")
