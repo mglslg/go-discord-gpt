@@ -13,9 +13,9 @@ import (
 func Chat(msg []ds.ChatMessage) (string, error) {
 	api := "https://api.openai.com/v1/chat/completions"
 	payload := map[string]interface{}{
-		"model":       g.AppContext.ChatModel,
+		"model":       g.AppContext.Model,
 		"messages":    msg,
-		"temperature": g.AppContext.ChatTemperature,
+		"temperature": g.AppContext.Temperature,
 	}
 
 	body, err := json.Marshal(payload)
@@ -53,7 +53,7 @@ func Chat(msg []ds.ChatMessage) (string, error) {
 	if len(chatGptResponse.Choices) == 0 {
 		return "[Failed to get gpt response]", nil
 	}
-	g.Logger.Println(">>>>>gpt model:", g.AppContext.ChatModel)
+	g.Logger.Println(">>>>>gpt model:", g.AppContext.Model)
 	g.Logger.Println(">>>>>gpt response:", chatGptResponse.Choices[0].Message.Content)
 	g.Logger.Println(">>>>>finish reason:", chatGptResponse.Choices[0].FinishReason)
 	g.Logger.Println(">>>>>total token:", chatGptResponse.Usage.TotalTokens)

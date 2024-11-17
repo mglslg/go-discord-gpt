@@ -11,9 +11,9 @@ type AppContext struct {
 	ClearCmd            string        `yaml:"clearCmd"`
 	ClearCmdDesc        string        `yaml:"clearCmdDesc"`
 	ClearDelimiter      string        `yaml:"clearDelimiter"`
-	ChatModel           string        `yaml:"chatModel"`
-	ChatTemperature     float32       `yaml:"chatTemperature"`
-	Character           string        `yaml:"character"`
+	Model               string        `yaml:"model"`
+	Temperature         float32       `yaml:"temperature"`
+	Prompt              string        `yaml:"prompt"`
 	FreeChatLimit       int           `yaml:"creeChatLimit"`
 	ConversationSupport bool          `yaml:"conversationSupport"`
 	ChannelConfig       []ChatChannel `yaml:"channelConfig"`

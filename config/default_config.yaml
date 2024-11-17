@@ -4,9 +4,9 @@ maxUserRecord: 50
 clearCmd: clear chat history
 clearCmdDesc: Clear the conversation context with ${botName}.
 clearDelimiter: (The chat history between you and the robot has been cleared.)
-chatModel: gpt-3.5-turbo
-chatTemperature: 0.8
-character: You are a helpful assistant.
+model: gpt-3.5-turbo
+temperature: 0.8
+prompt: You are a helpful assistant.
 freeChatLimit: 50
 onConversation: true
 onAt: true
